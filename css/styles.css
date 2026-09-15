@@ -93,6 +93,13 @@ body {
   50%      { box-shadow: 0 6px 25px rgba(255,90,95,.4), 0 0 0 10px rgba(255,90,95,0); }
 }
 
+/* 🛡️ Forzar ocultamiento del botón si ya estamos en la app instalada (CSS a prueba de fallos) */
+@media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
+  .btn-install {
+    display: none !important;
+  }
+}
+
 /* ════════ CONSOLA ════════ */
 .console {
   position: relative;
