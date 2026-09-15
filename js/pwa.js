@@ -16,31 +16,52 @@ if ('serviceWorker' in navigator) {
 const btnInstall = document.getElementById('btnInstall');
 let deferredPrompt = null;
 
-// Detecta si la app ya está instalada (modo standalone)
-function isStandalone() {
+// Clave de almacenamiento persistente
+const INSTALLED_KEY = 'pwa_installed';
+
+/**
+ * Devuelve true si la app está corriendo en modo standalone
+ * O si el usuario ya la instaló en una sesión anterior.
+ */
+function isInstalled() {
   return (
     window.matchMedia('(display-mode: standalone)').matches ||
-    window.navigator.standalone === true
+    window.navigator.standalone === true ||
+    localStorage.getItem(INSTALLED_KEY) === 'true'
   );
 }
 
-// Chrome / Edge / Android: capturamos el evento
+/** Oculta el botón de instalación de forma permanente. */
+function markAsInstalled() {
+  localStorage.setItem(INSTALLED_KEY, 'true');
+  if (btnInstall) btnInstall.hidden = true;
+  console.log('✅ App marcada como instalada — botón ocultado permanentemente.');
+}
+
+// -------- Ocultar botón de inmediato si ya está instalado --------
+if (btnInstall && isInstalled()) {
+  btnInstall.hidden = true;
+}
+
+// -------- Chrome / Edge / Android: capturamos el prompt --------
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
-  deferredPrompt = e;
-  if (!isStandalone() && btnInstall) {
-    btnInstall.hidden = false;
+  // Si la app ya fue instalada, ignoramos el evento completamente
+  if (isInstalled()) {
+    console.log('ℹ️ beforeinstallprompt ignorado: app ya instalada.');
+    return;
   }
-  console.log('📲 beforeinstallprompt capturado');
+  deferredPrompt = e;
+  if (btnInstall) btnInstall.hidden = false;
+  console.log('📲 beforeinstallprompt capturado — mostrando botón.');
 });
 
-// Click en el botón instalar
+// -------- Click en el botón instalar --------
 if (btnInstall) {
   btnInstall.addEventListener('click', async () => {
     if (!deferredPrompt) {
-      // Fallback para navegadores que no disparan el evento (iOS, Firefox)
+      // Fallback para navegadores sin soporte nativo (iOS / Firefox)
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
       if (isIOS) {
         alert(
           'Para instalar la app en iPhone/iPad:\n\n' +
@@ -59,7 +80,7 @@ if (btnInstall) {
       return;
     }
 
-    // Ocultar mientras se muestra el prompt nativo
+    // Ocultar botón mientras se muestra el prompt nativo
     btnInstall.hidden = true;
 
     try {
@@ -68,35 +89,32 @@ if (btnInstall) {
       console.log('🎯 Resultado de instalación:', outcome);
 
       if (outcome === 'accepted') {
-        console.log('🎉 Usuario aceptó la instalación');
+        // El usuario aceptó: persistimos la instalación
+        markAsInstalled();
       } else {
+        // El usuario canceló: volvemos a mostrar el botón
         console.log('❌ Usuario canceló la instalación');
-        if (!isStandalone()) btnInstall.hidden = false;
+        btnInstall.hidden = false;
       }
     } catch (err) {
       console.warn('⚠️ Error durante prompt():', err);
-      if (!isStandalone()) btnInstall.hidden = false;
+      btnInstall.hidden = false;
     } finally {
       deferredPrompt = null;
     }
   });
 }
 
-// Instalación exitosa
+// -------- Evento nativo de instalación completada --------
 window.addEventListener('appinstalled', () => {
-  if (btnInstall) btnInstall.hidden = true;
-  console.log('🎉 App instalada correctamente');
+  markAsInstalled();
+  console.log('🎉 App instalada correctamente (evento appinstalled).');
 });
 
-// Fallback iOS
+// -------- Fallback iOS: mostrar botón solo si no está instalada --------
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-if (isIOS && !isStandalone() && btnInstall) {
+if (isIOS && !isInstalled() && btnInstall) {
   btnInstall.hidden = false;
 }
 
-// Si ya está instalada, ocultar botón
-if (isStandalone() && btnInstall) {
-  btnInstall.hidden = true;
-}
-
-console.log('🚀 Radio Gracia y Paz — PWA lista');
+console.log('🚀 Radio Gracia y Paz — PWA lista | instalada:', isInstalled());
