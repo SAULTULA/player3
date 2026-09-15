@@ -30,7 +30,6 @@ const dialNeedle    = document.getElementById('dialNeedle');
 
 const ledLive       = document.getElementById('ledLive');
 const clockEl       = document.getElementById('clock');
-const listenersEl   = document.getElementById('listeners');
 const signalStatus  = document.getElementById('signalStatus');
 
 const verseText     = document.getElementById('verseText');
@@ -385,29 +384,33 @@ function actualizarAhoraSuena() {
       if (raw === currentSongKey) return;
       currentSongKey = raw;
 
+      if (!raw) {
+        // Sin metadato: mostrar texto por defecto (no dejar en blanco ni en "cargando")
+        if (songTitle)  songTitle.textContent  = 'RADIO EN VIVO';
+        if (songArtist) songArtist.textContent = 'Radio Gracia y Paz';
+        return;
+      }
+
       const parsed = parseSong(raw);
-      if (songTitle)  songTitle.textContent  = parsed.title  || '—';
+      if (songTitle)  songTitle.textContent  = parsed.title  || 'RADIO EN VIVO';
       if (songArtist) songArtist.textContent = parsed.artist || 'Radio Gracia y Paz';
 
       buscarCaratula(parsed.artist, parsed.title).then(url => {
         if (url && discCover) discCover.src = url;
       });
     })
-    .catch(() => {});
+    .catch(() => {
+      // Si la API falla: mostrar texto neutro, nunca dejar "CONECTANDO..."
+      if (!currentSongKey) {
+        if (songTitle)  songTitle.textContent  = 'RADIO EN VIVO';
+        if (songArtist) songArtist.textContent = 'Radio Gracia y Paz';
+      }
+    });
 }
 
 setInterval(() => { if (isPlaying) actualizarAhoraSuena(); }, 15000);
 
-// ================================================================
-// 7. OYENTES (simulado)
-// ================================================================
-function actualizarOyentes() {
-  if (!listenersEl) return;
-  const n = 40 + Math.floor(Math.random() * 80);
-  listenersEl.textContent = n.toString();
-}
-actualizarOyentes();
-setInterval(actualizarOyentes, 30000);
+
 
 // ================================================================
 // 8. MEDIA SESSION API

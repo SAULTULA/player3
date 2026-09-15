@@ -1,9 +1,10 @@
 /* ==================================================================
    RADIO GRACIA Y PAZ — Service Worker
    Cachea archivos base. El stream de audio SIEMPRE va por red.
+   v2 — Bump de versión para forzar actualización de caché (fix botón instalar)
    ================================================================== */
 
-const CACHE_NAME = 'graciaypaz-v1';
+const CACHE_NAME = 'graciaypaz-v2';
 
 const ASSETS_TO_CACHE = [
   './',

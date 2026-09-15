@@ -269,6 +269,37 @@ body {
   color: var(--text-dim);
 }
 
+.stat--whatsapp {
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+.btn-whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #25d366, #128c7e);
+  color: #fff;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  border-radius: 6px;
+  box-shadow: 0 4px 15px rgba(37, 211, 102, 0.2);
+  transition: all 0.25s ease;
+}
+.btn-whatsapp:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+}
+.btn-whatsapp:active {
+  transform: scale(0.96);
+}
+
 /* ▓ ZONA DIAL ▓ */
 .zone-dial {
   padding: 22px;
@@ -587,30 +618,54 @@ body {
 
 /* ---- RESPONSIVE ---- */
 @media (max-width: 780px) {
-  body { padding: 12px; align-items: flex-start; padding-top: 70px; }
+  body { padding: 10px; align-items: center; padding-top: 10px; }
 
   .console-body { grid-template-columns: 1fr; }
-  .zone-info { border-right: none; border-bottom: 1px solid var(--border); }
-  .zone-dial { border-right: none; border-bottom: 1px solid var(--border); padding: 18px; }
-  .dial { width: 180px; height: 180px; }
-  .dial-inner { width: 108px; height: 108px; }
+  .zone-info { border-right: none; border-bottom: 1px solid var(--border); padding: 12px; gap: 10px; }
+  .zone-dial { border-right: none; border-bottom: 1px solid var(--border); padding: 10px; }
+  .dial { width: 120px; height: 120px; }
+  .dial-inner { width: 68px; height: 68px; }
+  .dial-needle { top: 6px; height: 12px; transform-origin: 50% 55px; }
 
-  .console-top { padding: 12px 16px; }
+  .zone-controls { padding: 12px; gap: 8px; }
+
+  .console-top { padding: 10px 14px; }
   .brand-tag strong { font-size: 0.72rem; }
   .brand-tag small { font-size: 0.55rem; }
   .status-item { font-size: 0.6rem; padding: 4px 8px; }
 
-  .console-bottom { padding: 12px 16px; }
-  .verse-scroll p { font-size: 0.78rem; }
+  .console-bottom { padding: 10px 14px; gap: 10px; }
+  .verse-scroll p { font-size: 0.75rem; }
 
   .btn-install { top: 12px; right: 12px; padding: 8px 12px; font-size: 0.62rem; }
 }
 
 @media (max-width: 420px) {
-  .brand-tag img { width: 34px; height: 34px; }
-  .brand-tag strong { font-size: 0.68rem; letter-spacing: 1px; }
-  .zone-info, .zone-controls { padding: 16px; }
-  .track-title { font-size: 1.1rem; }
-  .stat-value { font-size: 1rem; }
-  .credits-line { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .brand-tag img { width: 30px; height: 30px; }
+  .brand-tag strong { font-size: 0.65rem; letter-spacing: 0.5px; }
+  
+  .zone-info, .zone-controls { padding: 10px 14px; }
+  .track-title { font-size: 1.05rem; margin-bottom: 2px; }
+  .spectrum { padding: 6px 8px; }
+  #waveform { height: 28px; }
+  
+  .stats-grid { gap: 8px; }
+  .stat { padding: 6px 8px; }
+  .stat-value { font-size: 0.95rem; }
+  .btn-whatsapp { font-size: 0.65rem; padding: 6px; }
+  
+  .btn-power { padding: 12px 10px; gap: 4px; }
+  .btn-power svg { width: 22px; height: 22px; }
+  .power-label { font-size: 0.6rem; }
+  
+  .credits-line { flex-direction: column; align-items: flex-start; gap: 6px; }
+}
+
+@media (max-height: 650px) {
+  /* Extra compactación vertical para pantallas muy cortas */
+  .dial { width: 90px; height: 90px; }
+  .dial-inner { width: 50px; height: 50px; }
+  .dial-needle { top: 4px; height: 10px; transform-origin: 50% 41px; }
+  .zone-info, .zone-dial, .zone-controls { padding: 8px 12px; gap: 6px; }
+  .btn-power { padding: 8px; }
 }
