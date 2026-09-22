@@ -38,14 +38,15 @@ const verseRef      = document.getElementById('verseRef');
 const waveform      = document.getElementById('waveform');
 
 // -------- ESTADO --------
-let isPlaying      = false;
-let isMuted        = false;
-let audioCtx       = null;
-let analyser       = null;
-let sourceNode     = null;
-let currentSongKey = '';
-let vizRAF         = null;
-let waveformCtx    = null;
+let isPlaying       = false;
+let isMuted         = false;
+let audioCtx        = null;
+let analyser        = null;
+let sourceNode      = null;
+let sourceConnected = false;   // ← guard: evita doble-conexión del sourceNode
+let currentSongKey  = '';
+let vizRAF          = null;
+let waveformCtx     = null;
 
 // ================================================================
 // 0. RELOJ EN VIVO
@@ -151,16 +152,32 @@ setInterval(() => { if (isPlaying) moverAguja(); }, 4000);
 // 3. AUDIO CONTEXT + ESPECTRO (canvas)
 // ================================================================
 function initAudioContext() {
-  if (audioCtx) return;
+  // Si ya existe el contexto y el nodo está conectado, no hacer nada.
+  if (audioCtx && sourceConnected) return;
+
   try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    sourceNode = audioCtx.createMediaElementSource(audio);
-    analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 256;
-    sourceNode.connect(analyser);
-    analyser.connect(audioCtx.destination);
+    // Crear el AudioContext sólo una vez.
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)(
+        { latencyHint: 'playback' }   // optimiza para streaming, reduce glitches
+      );
+    }
+
+    // Conectar el sourceNode sólo una vez.
+    // createMediaElementSource lanza si se llama dos veces sobre el mismo elemento.
+    if (!sourceConnected) {
+      sourceNode = audioCtx.createMediaElementSource(audio);
+      analyser   = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      sourceNode.connect(analyser);
+      analyser.connect(audioCtx.destination);
+      sourceConnected = true;
+    }
   } catch (e) {
     console.warn('AudioContext no disponible:', e);
+    // Si falla, asegurarse de no dejar el audio enrutado a ningún lado.
+    audioCtx        = null;
+    sourceConnected = false;
   }
 }
 
@@ -230,10 +247,23 @@ function animateSpectrum() {
 
 function startViz() {
   initAudioContext();
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-  sizeCanvas();
-  if (vizRAF) cancelAnimationFrame(vizRAF);
-  animateSpectrum();
+  if (audioCtx) {
+    // resume() devuelve una Promise — esperar antes de animar
+    // para evitar que el contexto suspendido cause silencio o cortes.
+    audioCtx.resume().then(() => {
+      sizeCanvas();
+      if (vizRAF) cancelAnimationFrame(vizRAF);
+      animateSpectrum();
+    }).catch(err => {
+      console.warn('No se pudo reanudar AudioContext:', err);
+      // Aún así iniciar el canvas aunque el analyser no funcione.
+      sizeCanvas();
+    });
+  } else {
+    // Sin AudioContext (fallback): mostrar canvas idle.
+    sizeCanvas();
+    drawIdleSpectrum();
+  }
 }
 
 function stopViz() {
@@ -242,6 +272,11 @@ function stopViz() {
     vizRAF = null;
   }
   drawIdleSpectrum();
+  // Suspender el contexto al pausar libera el pipeline de buffer
+  // y elimina la presión sobre el stream de audio (causa principal de cortes).
+  if (audioCtx && audioCtx.state === 'running') {
+    audioCtx.suspend().catch(() => {});
+  }
 }
 
 // ================================================================
